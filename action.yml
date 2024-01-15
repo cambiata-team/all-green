@@ -5,19 +5,16 @@ author: 'Your name or organization here'
 # Add your action's branding here. This will appear on the GitHub Marketplace.
 branding:
   icon: 'heart'
-  color: 'red'
+  color: 'green'
 
 # Define your inputs here.
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  token:
+    description: 'Your GitHub token'
     required: true
-    default: '1000'
-
-# Define your outputs here.
-outputs:
-  time:
-    description: 'Your output description here'
+  ref:
+    description: 'The ref to check'
+    required: true
 
 runs:
   using: node20
