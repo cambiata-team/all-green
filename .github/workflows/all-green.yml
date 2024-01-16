@@ -1,0 +1,19 @@
+name: All Green
+
+on:
+  pull_request:
+  check_run:
+
+jobs:
+  all-green-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Test Local Action
+        uses: ./
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
