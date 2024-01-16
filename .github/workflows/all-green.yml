@@ -1,8 +1,9 @@
 name: All Green
 
 on:
-  pull_request:
-  check_run:
+  push:
+    branches-ignore:
+      - main
 
 jobs:
   all-green-job:
@@ -15,5 +16,5 @@ jobs:
       - name: Test Local Action
         uses: ./
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}

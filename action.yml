@@ -15,6 +15,14 @@ inputs:
   ref:
     description: 'The ref to check'
     required: true
+  poll-frequency:
+    description: 'How often to poll for check statuses in seconds'
+    required: false
+    default: '15'
+  timeout:
+    description: 'How long to wait for checks to complete in seconds'
+    required: false
+    default: '900' # 15 minutes
 
 runs:
   using: node20
