@@ -28952,19 +28952,21 @@ async function run() {
         const octokit = github.getOctokit(githubToken);
         const currentCheck = github.context.job;
         console.log(`Waiting for all checks to complete on ${ref}`);
-        let allChecksCompleted = false;
+        let checksStatus = 'running';
         while (Date.now() < timeoutTime) {
-            allChecksCompleted = await areAllActionsCompleted({
+            checksStatus = await pollActions({
                 ref,
                 octokit,
                 currentCheck
             });
-            if (allChecksCompleted) {
+            if (checksStatus !== 'running')
                 break;
-            }
             await new Promise(resolve => setTimeout(resolve, pollFrequency));
         }
-        if (!allChecksCompleted) {
+        if (checksStatus === 'failed') {
+            core.setFailed('At least one check failed');
+        }
+        else if (checksStatus === 'running') {
             core.setFailed('Timeout waiting for all checks to complete');
         }
     }
@@ -28975,27 +28977,38 @@ async function run() {
     }
 }
 exports.run = run;
-const areAllActionsCompleted = async (options) => {
+const pollActions = async (options) => {
     console.log('\nChecking if all actions are completed');
     const checks = await options.octokit.rest.checks.listForRef({
         ref: options.ref,
         owner: github.context.repo.owner,
         repo: github.context.repo.repo
     });
-    let allChecksCompleted = true;
+    let checksStatus = 'passed';
     for (const check of checks.data.check_runs) {
-        if (check.name !== options.currentCheck) {
-            if (check.status !== 'completed') {
-                console.log(`Check ${check.name} is not completed`);
-                allChecksCompleted = false;
-            }
+        if (check.name === options.currentCheck)
+            continue;
+        if (check.status !== 'completed') {
+            console.log(`Check ${check.name} is not completed`);
+            checksStatus = 'running';
+            continue;
+        }
+        if (check.conclusion !== 'success' && check.conclusion !== 'skipped') {
+            console.log(`Check ${check.name} failed with conclusion: ${check.conclusion}`);
+            checksStatus = 'failed';
+            break;
         }
     }
-    if (allChecksCompleted)
-        console.log('All checks completed');
-    else
+    if (checksStatus === 'running') {
         console.log('Not all checks completed. Waiting...');
-    return allChecksCompleted;
+    }
+    else if (checksStatus === 'passed') {
+        console.log('All checks passed');
+    }
+    else {
+        console.log('At least one check failed');
+    }
+    return checksStatus;
 };
 
 
